@@ -1,69 +1,133 @@
 # Legacy Hub Directors
 
-## Purpose
+## Architecture principle
 
-Directors are the role-focused front doors of Legacy Hub. They receive requests, ensure the request is complete enough to proceed, apply business rules, assign bounded work to agents, and present a usable result to a person.
+Legacy Hub is organized around **business seats**.
 
-Directors coordinate. They do not silently create customer commitments, financial actions, or cross-system changes outside their authorization.
+Every employee has exactly one AI Director. That Director is the employee's front door and owns the complete business workflow for that employee's seat. Employees never interact directly with Specialist Agents.
+
+```mermaid
+flowchart TB
+    Employee["Employee"] --> Director["One seat Director"]
+    Director --> Airtable["Airtable"]
+    Director --> Drive["Google Drive"]
+    Director --> Gmail["Gmail"]
+    Director --> Calendar["Google Calendar"]
+    Director --> Specialists["Shared Specialist Agents"]
+    Airtable <--> Make["Make: Airtable↔Jobber sync only"]
+    Make <--> Jobber["Jobber"]
+```
 
 ## Director operating contract
 
-Every director should:
+Every Director must:
 
-1. Identify the request type and related customer, property, project, or business area.
-2. Check required information and flag gaps.
-3. Route bounded work to the correct specialist agent.
-4. Return a structured outcome: recommendation, draft, task, red flag, or approval request.
-5. Record the result and ownership in the appropriate workspace.
-6. Require human approval before defined external or financial actions.
+1. Serve as its employee's front door for requests, information, and work.
+2. Own the full workflow for its business seat from intake through follow-up, exception handling, and completion.
+3. Handle customer communication for the seat when the required approval rules are satisfied.
+4. Manage scheduling, calendar work, tasks, and role-specific business decisions.
+5. Create, update, and maintain the structured Airtable data for its workflow.
+6. Read and organize supporting files in Google Drive.
+7. Send and receive Gmail for the seat, subject to approval policy.
+8. Request bounded work from a shared Specialist Agent only when specialized expertise is required.
+9. Interpret the Specialist Agent's structured result, make the role-appropriate decision, and complete the next action.
 
-## Director roster
+Directors should perform work directly whenever possible. They do not transfer workflow or customer ownership to a Specialist Agent.
 
-| Director | Primary responsibility | Typical users | Status |
-| --- | --- | --- | --- |
-| **AI Director** | Central intake, request classification, customer/property verification, and routing to the correct specialist or workflow | Lu, office | Planned / active scope evolves |
-| **Sales & Design Director** | Consultation capture, proposal readiness, mood-board/design coordination, and sales follow-up | Sales, designer | Planned |
-| **Account Manager Director** | Property evaluations, customer communication, maintenance visibility, enhancement opportunities, and customer-for-life follow-up | Account manager | Planned |
-| **Operations Director** | Project readiness, scheduling coordination, material readiness, production exceptions, and closeout coordination | Lu, crew leadership, operations | Planned |
-| **Financial Intelligence Director** | Financial reporting, profitability visibility, cash-flow attention, and controlled financial routing | Authorized financial roles | Future / restricted |
+## Direct access and system ownership
 
-## AI Director
+Every Director has direct access to the same core business systems.
 
-### Responsibilities
+| System | Director responsibility |
+| --- | --- |
+| **Airtable** | Read and update all relevant structured business data, task ownership, workflow state, red flags, and decisions. |
+| **Google Drive** | Read, organize, create, and link supporting documents, photos, notes, templates, and final assets. |
+| **Gmail** | Manage customer and internal email communication for the seat, subject to approval policy. |
+| **Google Calendar** | Manage appointments, follow-ups, and scheduling work for the seat. |
 
-- Determine whether a request concerns a new customer, existing customer, quote, invoice, research, plant-library item, or other approved work area.
-- Verify existing customers and properties before duplicate creation.
-- Route approved customer/contact/property information to the right system and workflow.
-- Coordinate the current specialist team.
-- Place approved website photos in the correct Google Drive website-image folders.
+The only external systems are **Make** and **Jobber**.
 
-### Boundaries
+| External system | Limited role |
+| --- | --- |
+| **Make** | Synchronizes defined structured Airtable data with Jobber only. It does not contain business logic, make decisions, route employees to agents, manage customer conversations, or own workflow state. |
+| **Jobber** | The external system that receives and provides the data covered by the Airtable synchronization contract. |
 
-- Does not replace the Jobber Quote Agent's quote/proposal preparation responsibility.
-- Does not independently send customer communications, issue invoices, or approve financial actions.
-- Does not bypass specialist permissions.
+## Business-seat Director roster
 
-## Director handoff standard
+The following is an initial example. Each employee receives one Director for their assigned business seat; a Director never spans multiple employee seats.
+
+| Business seat | Its single AI Director | Workflow ownership |
+| --- | --- | --- |
+| Owner | **Owner Director** | Company priorities, approvals, executive decisions, and cross-seat exceptions |
+| Sales & Design | **Sales & Design Director** | Leads, consultations, proposals, designs, customer follow-up, and sales scheduling |
+| Account Management | **Account Manager Director** | Property evaluations, ongoing customer communication, maintenance visibility, enhancement opportunities, and customer-for-life follow-up |
+| Crew Leadership | **Crew Leader Director** | Daily field tasks, crew capture, job updates, issues, and internal scheduling coordination |
+
+Adding a Director requires a defined employee seat and a clear workflow boundary. Do not add a Director merely to create another business function.
+
+## Shared Specialist Agents
+
+Specialist Agents are shared services. They never communicate directly with employees, own a workflow, or own a customer.
+
+```mermaid
+flowchart LR
+    Employee["Employee"] --> Director["Seat Director"]
+    Director --> Agent["Shared Specialist Agent"]
+    Agent --> Result["Structured result"]
+    Result --> Director
+    Director --> Employee
+```
+
+### Specialist service contract
+
+1. A Director sends the Specialist Agent a bounded request with the relevant Airtable record, context, constraints, and requested outcome.
+2. The Specialist Agent performs only its defined service.
+3. The Specialist Agent returns a structured result to the requesting Director.
+4. The requesting Director decides the next business action, updates Airtable, and communicates with the employee or customer as appropriate.
+
+### Example: proposal preparation
+
+1. The Sales & Design employee asks the **Sales & Design Director** to prepare a proposal.
+2. The Director verifies the customer, property, scope, pricing inputs, files, and Airtable workflow state.
+3. The Director prepares the proposal directly. If a specialized design asset is needed, it asks the shared **Design Agent** for that bounded asset.
+4. The Design Agent returns its structured result to the Director.
+5. The Director finalizes the proposal workflow, updates Airtable, manages customer follow-up and calendar work, and handles any required approval.
+6. Where a defined Jobber field must be synchronized, **Make** synchronizes it with Airtable. Make does not decide whether the proposal is ready or communicate with the employee or customer.
+
+## Director-to-specialist request standard
 
 | Field | Requirement |
 | --- | --- |
-| Request ID | Unique identifier or linked Airtable record |
-| Context | Customer, property, project, related files, and source notes |
-| Requested outcome | Clear task and expected deliverable |
-| Constraints | Budget, timing, customer preferences, policy, and exclusions |
-| Approval status | Draft, ready for review, approved, rejected, or not required |
-| Receiving owner | Director, agent, or human role responsible for next action |
+| `request_id` | Linked Airtable record or unique workflow request ID |
+| `requesting_director` | The Director that owns the employee-seat workflow |
+| `context` | Customer, property, project, source files, notes, and related records |
+| `requested_outcome` | Specific bounded service and expected deliverable |
+| `constraints` | Budget, timing, customer preferences, policy, and exclusions |
+| `approval_status` | Draft, ready for review, approved, rejected, or not required |
 
-## Escalation rules
+## Specialist result standard
 
-- Missing identity, property, scope, or approval information creates a visible exception—not a guess.
-- Conflicting instructions escalate to the responsible human role.
-- Customer-impacting, financial, legal, safety, and irreversible actions require a human review path.
-- A director may recommend a next step but cannot assign authority it does not have.
+| Field | Requirement |
+| --- | --- |
+| `request_id` | Source request ID from the Director |
+| `status` | `complete`, `needs_review`, `blocked`, or `failed` |
+| `summary` | Concise service result |
+| `outputs` | Links or IDs for drafts, files, records, or recommendations |
+| `missing_information` | Gaps that prevented completion |
+| `red_flags` | Issues that require the Director's attention |
+| `recommended_next_step` | Suggested next action for the Director; not an autonomous decision |
+
+## Escalation and decision rules
+
+- Missing customer, property, scope, or approval information creates a visible Airtable exception; the Director does not guess.
+- Conflicting instructions escalate to the human accountable for the seat or to the Owner Director when the conflict crosses seats.
+- Customer-impacting, financial, legal, safety, and irreversible actions follow the approval rule defined for the seat workflow.
+- The Director owns the business decision within its role. It may request specialist input, but it does not delegate role accountability.
+- Make is never an escalation path or decision-maker; it only performs the defined Airtable-to-Jobber synchronization.
 
 ## Open decisions
 
-- Final director names and user-facing interface labels: **TBD**
-- Formal escalation service-level targets: **TBD**
-- Director ownership and backup coverage: **TBD**
-- Exact permission matrix by director: **TBD**
+- Final employee-to-business-seat assignments and backup coverage: **TBD**
+- Exact approval matrix for each seat and customer-facing action: **TBD**
+- Airtable field-level ownership by Director: **TBD**
+- Jobber fields included in the Make synchronization contract: **TBD**
