@@ -1,81 +1,128 @@
 # Legacy Hub Architecture
 
-## Architecture summary
+## Purpose
 
-Legacy Hub connects a governed intelligence layer to the business systems that already own company data and transactions. It does not attempt to duplicate every external system.
+Legacy Hub is the operating layer for Legacy. It manages the people-facing AI structure, workflow state, tasks, permissions, activity history, and configuration required to run work safely.
+
+Legacy Hub is responsible for:
+
+- Director Registry
+- Specialist Agent Registry
+- Workflow Engine
+- Task Manager
+- Permission Management
+- Activity Logging
+- Configuration Management
+
+Legacy Hub does **not** make business decisions. Business decisions belong to the Director assigned to the Task.
+
+## Architecture principles
+
+- The architecture is organized around **business seats**. Each employee has one AI Director: the employee's front door to Legacy.
+- A Director owns the complete workflow for its business seat and makes decisions within its approved role.
+- Specialist Agents are shared services. They never communicate directly with employees or own customer relationships.
+- Airtable is the source of truth for structured Legacy data. Google Drive stores files; Airtable stores their references.
+- Make has one narrow external responsibility: synchronize approved structured Airtable data with Jobber. No business logic belongs in Make.
+- Every request creates a Task. The Task, not a chat message or a file, is the object that moves through the workflow.
+
+## Component model
 
 ```mermaid
 flowchart TB
-    People["Lu, office, sales, crews"] --> Capture["Capture: forms, photos, voice, email"]
-    Capture --> Directors["Legacy directors and specialist agents"]
-    Directors --> Airtable["Airtable: workflow and attention"]
-    Directors --> Drive["Google Drive: company knowledge vault"]
-    Directors --> Jobber["Jobber: customer transactions"]
-    Directors --> Make["Make: approved repeatable automations"]
+    Employee["Employee"] --> Director["Assigned AI Director"]
+    Director --> Hub["Legacy Hub"]
+    Hub --> Tasks["Task Manager"]
+    Hub --> Engine["Workflow Engine"]
+    Director --> Specialist["Shared Specialist Agent"]
+    Director --> Airtable["Airtable"]
+    Director --> Drive["Google Drive"]
+    Director --> Gmail["Gmail"]
+    Director --> Calendar["Google Calendar"]
+    Airtable <--> Make["Make sync only"]
+    Make <--> Jobber["Jobber"]
 ```
 
-## System responsibilities
+## Responsibilities by component
 
-| System | Responsibility | Does not own |
+| Component | Responsibilities | Must not do |
 | --- | --- | --- |
-| **Google Drive** | Documents, photos, voice files, proposal files, templates, archives, and durable company knowledge | Workflow status or customer-facing transactions |
-| **Airtable** | Structured operational data, dashboards, workspaces, tasks, red flags, and reporting | Canonical file storage or transaction execution |
-| **Jobber** | Customer-facing quotes, approvals, deposits, scheduling, invoices, and related transaction history | Legacy knowledge, internal intelligence, or AI routing |
-| **Make** | Repeatable, approved orchestration between systems | Business policy or unreviewed decisions |
-| **ChatGPT / AI services** | Analysis, drafting, extraction, summarization, classification, and controlled specialist work | Unapproved external actions or authoritative transaction records |
+| **Director** | Own seat workflow, make role-authorized business decisions, communicate with customers, schedule, manage Tasks, update Airtable, organize/read Drive, use Gmail and Calendar, request specialist work | Delegate ownership of a workflow or customer to a Specialist Agent |
+| **Specialist Agent** | Perform bounded expert work and return structured results to the requesting Director | Communicate directly with employees/customers, make workflow decisions, own customers or Tasks |
+| **Workflow Engine** | Track state, route Tasks, invoke Directors, invoke Specialists at a Director's request, maintain audit history | Decide business outcome, choose customer terms, approve transactions, or invent workflow policy |
+| **Task Manager** | Create, assign, prioritize, date, update, and close Tasks | Make a business decision about a Task |
+| **Director Registry** | Define active Directors, seats, tools, permissions, and supported workflows | Assign authority not approved in configuration |
+| **Specialist Agent Registry** | Define shared Specialists, capabilities, permitted inputs/outputs, and invocation rules | Give Specialists direct employee-facing access |
+| **Permission Management** | Enforce approved access to tools, data, and actions | Allow indirect permission escalation |
+| **Activity Logging** | Preserve inputs, assignments, decisions, actions, timestamps, and outcomes | Replace source records or approval requirements |
+| **Configuration Management** | Store workflow definitions, routing rules, permissions, templates, and feature settings | Make runtime business decisions |
+| **Airtable** | Store structured business data, Task records, workflow state, registries, logs, and Drive references | Store canonical files |
+| **Google Drive** | Store photos, voice notes, documents, proposals, templates, and other files | Be the structured workflow database |
+| **Make** | Synchronize approved structured Airtable data with Jobber | Route Director work, decide logic, or communicate between Directors |
+| **Jobber** | Operate customer transaction records synchronized from approved Airtable data | Own Legacy workflow state or AI decisioning |
 
-## Logical layers
+## Task lifecycle
 
-### 1. Capture layer
+```mermaid
+stateDiagram-v2
+    [*] --> Created
+    Created --> Routed: Workflow Engine assigns Director
+    Routed --> InProgress: Director accepts work
+    InProgress --> Waiting: Information, approval, or dependency needed
+    Waiting --> InProgress: Requirement resolved
+    InProgress --> SpecialistWork: Director requests expertise
+    SpecialistWork --> InProgress: Structured result returned
+    InProgress --> Completed: Director completes outcome
+    Created --> Cancelled
+    Routed --> Cancelled
+    Waiting --> Cancelled
+    Completed --> [*]
+    Cancelled --> [*]
+```
 
-Inputs arrive through forms, uploads, voice notes, photos, email, and operator entry. Every input should be associated with the appropriate customer, property, project, or intake record before downstream work begins.
+The Workflow Engine changes state and records events. The assigned Director decides whether the Task needs a Specialist, customer communication, a schedule action, or another approved business action.
 
-### 2. Knowledge and data layer
+## Workflow Engine contract
 
-Google Drive stores durable artifacts. Airtable stores structured relationships, lifecycle state, assignments, and operational attention. Each record should link to its source files rather than duplicate them where practical.
+For every Task, the Workflow Engine must:
 
-### 3. Intelligence and routing layer
+1. Create or receive the Task with a unique Task ID.
+2. Identify the Workflow Type.
+3. Assign the responsible Director using configured routing rules.
+4. Track status, priority, due date, assignments, and timestamps.
+5. Record every routing, action request, result, and state change in the audit history.
+6. Invoke a Specialist Agent only when the assigned Director requests it under that Specialist's registry permissions.
+7. Return control and structured results to the assigned Director.
 
-Directors interpret the request, enforce scope and approval rules, choose a specialist agent, and return structured results. Specialists must not expand their own permission scope.
+It must never determine pricing, approve a customer exception, select a design, authorize a quote, or make any other business decision.
 
-### 4. Transaction and delivery layer
+## Core integrations
 
-Jobber remains the customer transaction system. Make executes repeatable integrations after the workflow is defined, tested, and approved.
-
-### 5. Experience layer
-
-Airtable Interfaces initially provide owner, sales/design, account manager, and crew leader views. Future interface technology is TBD.
-
-## Integration rules
-
-- Use API and webhook integrations only after a manual workflow is proven.
-- Preserve source links, timestamps, responsible party, and approval state for automated actions.
-- Treat external API writes as controlled actions with validation and logging.
-- Do not create duplicate customers or properties without verification.
-- Jobber API actions that create or alter quotes, invoices, payments, or schedules require the approval rule defined in the relevant workflow.
-
-## Security and permissions
-
-| Area | Default policy | Details |
+| Integration | Connection model | Allowed purpose |
 | --- | --- | --- |
-| Customer communications | Draft only until authorized approval | Sender, approver, and final message must be retained. |
-| Quotes and invoices | Draft only until authorized approval | Jobber is the transaction authority. |
-| Financial data | Restricted to approved financial roles and agents | Exact role matrix is TBD. |
-| Google Drive files | Least-privilege access by folder/workspace | Folder-level policy is TBD. |
-| Agent tools | Minimum tools required for the assigned task | No indirect permission escalation through another agent. |
+| Airtable | Direct to Directors and Legacy Hub | Structured data, Task records, workflow state, registries, logs, and reporting |
+| Google Drive | Direct to Directors | Read, organize, and link files; preserve durable artifacts |
+| Gmail | Direct to Directors | Send and receive customer and internal email under applicable approval rules |
+| Google Calendar | Direct to Directors | Manage schedule and calendar work for the Director's seat |
+| Make | Airtable ↔ Jobber only | Synchronize approved structured data |
+| Jobber | Through the approved Airtable synchronization boundary | Customer transaction synchronization |
 
-## Operational requirements
+## Audit, permissions, and configuration
 
-- **Traceability:** record source input, decision, actor, timestamps, and final status.
-- **Reliability:** failed automations create a visible exception or red flag.
-- **Idempotency:** repeatable workflows must avoid duplicate records and transactions.
-- **Auditability:** customer, financial, and approval actions must be reconstructable.
-- **Portability:** data exports and documented schemas must allow future migration.
+Every meaningful action must be attributable to a Task and include the actor, timestamp, input/source, outcome, and any approval reference. Permission checks occur before a Director or Specialist uses a tool or data set.
 
-## Open architecture decisions
+Configuration defines:
 
-- Authentication and role provisioning approach: **TBD**
-- Webhook/event catalog: **TBD**
-- Error retry and reconciliation standard: **TBD**
-- Folder naming and lifecycle policy: **TBD**
-- API credential storage and rotation policy: **TBD**
+- Director-to-seat assignments
+- Supported workflow types and routing rules
+- Specialist capabilities and input/output schemas
+- Tool and data permissions
+- Task status, priority, and due-date rules
+- Approval requirements and message/document templates
+- Airtable-to-Jobber synchronization mappings
+
+## Implementation constraints
+
+- Do not permit a Specialist Agent to initiate employee or customer communication.
+- Do not let Make contain decision trees, approval logic, or Director-to-Director communication.
+- Do not use a chat thread as the authoritative workflow record; link it to the Task if it is relevant.
+- Preserve cross-system identifiers and timestamps so Airtable↔Jobber synchronization is traceable and idempotent.
