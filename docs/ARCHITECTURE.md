@@ -2,80 +2,83 @@
 
 ## Architecture summary
 
-Legacy Hub connects a governed intelligence layer to the business systems that already own company data and transactions. It does not attempt to duplicate every external system.
+Legacy Hub is organized around business seats. Each employee works through exactly one AI Director, which owns that seat's end-to-end workflow. Directors work directly in the connected applications and call shared Specialist Agents only for bounded expertise.
 
 ```mermaid
 flowchart TB
-    People["Lu, office, sales, crews"] --> Capture["Capture: forms, photos, voice, email"]
-    Capture --> Directors["Legacy directors and specialist agents"]
-    Directors --> Airtable["Airtable: workflow and attention"]
-    Directors --> Drive["Google Drive: company knowledge vault"]
-    Directors --> Jobber["Jobber: customer transactions"]
-    Directors --> Make["Make: approved repeatable automations"]
+    Employee["Employee in a business seat"] --> Director["One AI Director for that seat"]
+    Director --> Airtable["Airtable: structured-data source of truth"]
+    Director --> Drive["Google Drive: files"]
+    Director --> Gmail["Gmail: communications"]
+    Director --> Calendar["Google Calendar: schedule"]
+    Director --> Specialists["Shared Specialist Agents"]
+    Airtable <--> Make["Make: synchronization only"]
+    Make <--> Jobber["Jobber"]
 ```
 
 ## System responsibilities
 
 | System | Responsibility | Does not own |
 | --- | --- | --- |
-| **Google Drive** | Documents, photos, voice files, proposal files, templates, archives, and durable company knowledge | Workflow status or customer-facing transactions |
-| **Airtable** | Structured operational data, dashboards, workspaces, tasks, red flags, and reporting | Canonical file storage or transaction execution |
-| **Jobber** | Customer-facing quotes, approvals, deposits, scheduling, invoices, and related transaction history | Legacy knowledge, internal intelligence, or AI routing |
-| **Make** | Repeatable, approved orchestration between systems | Business policy or unreviewed decisions |
-| **ChatGPT / AI services** | Analysis, drafting, extraction, summarization, classification, and controlled specialist work | Unapproved external actions or authoritative transaction records |
+| **Airtable** | Source of truth for all structured business information, workflow state, dashboards, tasks, red flags, decisions, and references to files and Jobber records | Durable file storage |
+| **Google Drive** | Documents, photos, voice files, proposal files, templates, archives, and durable company knowledge | Structured workflow state or business decisions |
+| **Gmail** | Customer and internal email communication managed by the appropriate Director | Workflow ownership or structured business data |
+| **Google Calendar** | Calendar and scheduling work managed by the appropriate Director | Workflow ownership or structured business data |
+| **Specialist Agents** | Bounded shared expertise and structured results for requesting Directors | Employee interaction, customers, workflow ownership, or autonomous decisions |
+| **Make** | Synchronization of approved structured Airtable data with Jobber | Business logic, decisions, customer communication, workflow state, or agent routing |
+| **Jobber** | External service system for the defined data synchronized with Airtable | Legacy workflow ownership, AI routing, or the structured-data source of truth |
 
 ## Logical layers
 
-### 1. Capture layer
+### 1. Seat experience layer
 
-Inputs arrive through forms, uploads, voice notes, photos, email, and operator entry. Every input should be associated with the appropriate customer, property, project, or intake record before downstream work begins.
+An employee interacts with one Director for their business seat. The Director is the front door and manages the entire seat workflow, including customer communication, tasks, scheduling, calendar work, and role-appropriate business decisions.
 
-### 2. Knowledge and data layer
+### 2. Connected application layer
 
-Google Drive stores durable artifacts. Airtable stores structured relationships, lifecycle state, assignments, and operational attention. Each record should link to its source files rather than duplicate them where practical.
+Every Director accesses Airtable, Google Drive, Gmail, and Google Calendar directly. Airtable stores structured data and links to Drive files; Drive stores the files themselves.
 
-### 3. Intelligence and routing layer
+### 3. Shared expertise layer
 
-Directors interpret the request, enforce scope and approval rules, choose a specialist agent, and return structured results. Specialists must not expand their own permission scope.
+A Director may request a bounded service from a Specialist Agent, such as plant research, design preparation, photo organization, or financial analysis. The Specialist Agent returns a structured result only to that Director. The Director remains accountable for the next action.
 
-### 4. Transaction and delivery layer
+### 4. External synchronization layer
 
-Jobber remains the customer transaction system. Make executes repeatable integrations after the workflow is defined, tested, and approved.
+Make synchronizes the approved Airtable field contract with Jobber. No business logic belongs in Make. Make is never a Director, an employee communication channel, a customer owner, or an agent-to-agent pathway.
 
-### 5. Experience layer
+## Data and synchronization rules
 
-Airtable Interfaces initially provide owner, sales/design, account manager, and crew leader views. Future interface technology is TBD.
-
-## Integration rules
-
-- Use API and webhook integrations only after a manual workflow is proven.
-- Preserve source links, timestamps, responsible party, and approval state for automated actions.
-- Treat external API writes as controlled actions with validation and logging.
-- Do not create duplicate customers or properties without verification.
-- Jobber API actions that create or alter quotes, invoices, payments, or schedules require the approval rule defined in the relevant workflow.
+- Airtable is the source of truth for all structured business information.
+- Google Drive stores files; Airtable stores the related links and metadata.
+- Directors update Airtable directly as they work.
+- Make moves only defined structured fields between Airtable and Jobber.
+- A synchronization failure creates a visible Airtable exception or red flag; Make does not decide how to resolve it.
+- Do not create duplicate customers or properties without verification in Airtable.
+- Directors, not Make, apply approval rules before customer-impacting or financial actions.
 
 ## Security and permissions
 
 | Area | Default policy | Details |
 | --- | --- | --- |
-| Customer communications | Draft only until authorized approval | Sender, approver, and final message must be retained. |
-| Quotes and invoices | Draft only until authorized approval | Jobber is the transaction authority. |
-| Financial data | Restricted to approved financial roles and agents | Exact role matrix is TBD. |
+| Director access | Direct access to Airtable, Drive, Gmail, and Calendar | Actions remain limited by the Director's seat permissions and approval rules. |
+| Customer communications | Draft only until authorized approval | Sender, approver, and final message must be retained in Airtable. |
+| Jobber synchronization | Defined Airtable fields only | Make has no authority beyond the approved synchronization contract. |
+| Financial data | Restricted to approved financial roles and Specialist Agents | Exact role matrix is TBD. |
 | Google Drive files | Least-privilege access by folder/workspace | Folder-level policy is TBD. |
-| Agent tools | Minimum tools required for the assigned task | No indirect permission escalation through another agent. |
+| Specialist tools | Minimum tools required for the bounded service | No indirect permission escalation through a Director or another Specialist Agent. |
 
 ## Operational requirements
 
-- **Traceability:** record source input, decision, actor, timestamps, and final status.
-- **Reliability:** failed automations create a visible exception or red flag.
-- **Idempotency:** repeatable workflows must avoid duplicate records and transactions.
+- **Traceability:** record source input, decision, actor, timestamps, and final status in Airtable.
+- **Reliability:** failed synchronization creates a visible exception or red flag.
+- **Idempotency:** synchronization must avoid duplicate records and transactions.
 - **Auditability:** customer, financial, and approval actions must be reconstructable.
-- **Portability:** data exports and documented schemas must allow future migration.
+- **Portability:** Airtable exports and documented schemas must allow future migration.
 
 ## Open architecture decisions
 
 - Authentication and role provisioning approach: **TBD**
-- Webhook/event catalog: **TBD**
+- Make-to-Jobber synchronization field catalog: **TBD**
 - Error retry and reconciliation standard: **TBD**
 - Folder naming and lifecycle policy: **TBD**
 - API credential storage and rotation policy: **TBD**
