@@ -1,81 +1,73 @@
 # Legacy Hub Architecture
 
-## Architecture summary
+## Legacy v1 architecture
 
-Legacy Hub connects a governed intelligence layer to the business systems that already own company data and transactions. It does not attempt to duplicate every external system.
+Legacy v1 is a seat-based operating model. Each employee interacts with exactly one assigned Director. There is no central AI Director, super Director, Operations Director, or Financial Intelligence Director in v1.
 
 ```mermaid
 flowchart TB
-    People["Lu, office, sales, crews"] --> Capture["Capture: forms, photos, voice, email"]
-    Capture --> Directors["Legacy directors and specialist agents"]
-    Directors --> Airtable["Airtable: workflow and attention"]
-    Directors --> Drive["Google Drive: company knowledge vault"]
-    Directors --> Jobber["Jobber: customer transactions"]
-    Directors --> Make["Make: approved repeatable automations"]
+    Employee["Employee in one business seat"] --> Director["Assigned Director"]
+    Director --> Airtable["Airtable: structured data and workflow"]
+    Director --> Drive["Google Drive: files and photos"]
+    Director --> Gmail["Gmail: customer communication"]
+    Director --> Calendar["Google Calendar: calendar management"]
+    Director -. "bounded request" .-> Specialist["Shared Specialist Agent"]
+    Specialist -. "structured result" .-> Director
+    Airtable <--> Make["Make: defined synchronization only"]
+    Make <--> Jobber["Jobber: customer-facing transactions"]
 ```
 
-## System responsibilities
+## Included components
 
-| System | Responsibility | Does not own |
+| Component | Legacy v1 responsibility | Does not do |
 | --- | --- | --- |
-| **Google Drive** | Documents, photos, voice files, proposal files, templates, archives, and durable company knowledge | Workflow status or customer-facing transactions |
-| **Airtable** | Structured operational data, dashboards, workspaces, tasks, red flags, and reporting | Canonical file storage or transaction execution |
-| **Jobber** | Customer-facing quotes, approvals, deposits, scheduling, invoices, and related transaction history | Legacy knowledge, internal intelligence, or AI routing |
-| **Make** | Repeatable, approved orchestration between systems | Business policy or unreviewed decisions |
-| **ChatGPT / AI services** | Analysis, drafting, extraction, summarization, classification, and controlled specialist work | Unapproved external actions or authoritative transaction records |
+| **Owner Director** | Owner priorities, approvals, cross-seat visibility, and owner workflow | Replace another employee's assigned Director |
+| **Design & Sales Director** | Design/sales workflow, proposal workflow, and sales communication | Become a standalone quote agent |
+| **Account Manager Director** | Property relationship, evaluations, customer communication, and schedule coordination | Become an Operations Director |
+| **Crew Leader Director** | Daily crew management, field capture, job status, and field escalation | Make customer or financial commitments outside approval rules |
+| **Specialist Agents** | Bounded expertise and structured results for Directors | Employee interaction, workflow ownership, or customer ownership |
+| **Airtable** | Structured business data, tasks, workflow state, links, dashboards, and sync records | Durable file storage or customer-facing transaction execution |
+| **Google Drive** | Documents, photos, voice notes, designs, and other files | Structured workflow state |
+| **Gmail / Google Calendar** | Communication and calendar actions performed by Directors | Legacy's authoritative structured record |
+| **Make** | Defined synchronization between Airtable and Jobber | Business logic, decisions, employee routing, or communication |
+| **Jobber** | Customer-facing quote, scheduling, and invoice transactions | Legacy workflow ownership or internal company knowledge |
 
-## Logical layers
+## Director interaction rules
 
-### 1. Capture layer
+- An employee uses only the Director assigned to that employee's business seat.
+- A Director may communicate directly with another Director when a request crosses seats; the receiving Director owns its own seat's next work.
+- No Director has universal workflow ownership. The Owner Director provides owner-level visibility and decisions, not a central intake layer.
+- Directors perform work directly whenever possible and use a Specialist Agent only for the agent's defined shared expertise.
 
-Inputs arrive through forms, uploads, voice notes, photos, email, and operator entry. Every input should be associated with the appropriate customer, property, project, or intake record before downstream work begins.
+## Information and synchronization rules
 
-### 2. Knowledge and data layer
+1. Directors create and update structured business records in Airtable.
+2. Directors store files in Google Drive and link them from Airtable.
+3. Directors send and receive Gmail, manage Google Calendar, and record material workflow outcomes back in Airtable.
+4. Make synchronizes only approved, mapped Airtable fields and statuses with Jobber. It contains no business policy or decision tree.
+5. Jobber transaction changes returned through Make are reconciled into the linked Airtable records, with source IDs and timestamps.
+6. A failed or conflicting synchronization creates an Airtable exception for the responsible Director; Make does not decide how to resolve it.
 
-Google Drive stores durable artifacts. Airtable stores structured relationships, lifecycle state, assignments, and operational attention. Each record should link to its source files rather than duplicate them where practical.
+## Security and approvals
 
-### 3. Intelligence and routing layer
+| Area | Legacy v1 rule |
+| --- | --- |
+| Customer communication | Director prepares and sends only within the approved workflow and human-approval rule. |
+| Quotes, schedules, and invoices | Jobber performs the customer-facing transaction; its linked Airtable record retains workflow context and approval state. |
+| Financial analysis | The Financial Analysis Agent provides structured analysis only; an authorized Director or human makes the business decision. |
+| Specialist access | Minimum data and tool access needed for the bounded request; no indirect permission escalation. |
+| Audit trail | Airtable records source, owner, decision, status, external IDs, and timestamps. |
 
-Directors interpret the request, enforce scope and approval rules, choose a specialist agent, and return structured results. Specialists must not expand their own permission scope.
+## Future Releases
 
-### 4. Transaction and delivery layer
+- Additional Directors, including Operations and Financial Intelligence Directors
+- Additional specialist agents and integrations
+- Custom application/interface replacement for Airtable Interfaces
+- Broader automation only after the relevant manual workflow and data mapping are proven
 
-Jobber remains the customer transaction system. Make executes repeatable integrations after the workflow is defined, tested, and approved.
+## Open decisions
 
-### 5. Experience layer
-
-Airtable Interfaces initially provide owner, sales/design, account manager, and crew leader views. Future interface technology is TBD.
-
-## Integration rules
-
-- Use API and webhook integrations only after a manual workflow is proven.
-- Preserve source links, timestamps, responsible party, and approval state for automated actions.
-- Treat external API writes as controlled actions with validation and logging.
-- Do not create duplicate customers or properties without verification.
-- Jobber API actions that create or alter quotes, invoices, payments, or schedules require the approval rule defined in the relevant workflow.
-
-## Security and permissions
-
-| Area | Default policy | Details |
-| --- | --- | --- |
-| Customer communications | Draft only until authorized approval | Sender, approver, and final message must be retained. |
-| Quotes and invoices | Draft only until authorized approval | Jobber is the transaction authority. |
-| Financial data | Restricted to approved financial roles and agents | Exact role matrix is TBD. |
-| Google Drive files | Least-privilege access by folder/workspace | Folder-level policy is TBD. |
-| Agent tools | Minimum tools required for the assigned task | No indirect permission escalation through another agent. |
-
-## Operational requirements
-
-- **Traceability:** record source input, decision, actor, timestamps, and final status.
-- **Reliability:** failed automations create a visible exception or red flag.
-- **Idempotency:** repeatable workflows must avoid duplicate records and transactions.
-- **Auditability:** customer, financial, and approval actions must be reconstructable.
-- **Portability:** data exports and documented schemas must allow future migration.
-
-## Open architecture decisions
-
-- Authentication and role provisioning approach: **TBD**
-- Webhook/event catalog: **TBD**
-- Error retry and reconciliation standard: **TBD**
-- Folder naming and lifecycle policy: **TBD**
-- API credential storage and rotation policy: **TBD**
+- Identity and role-provisioning model: **TBD**
+- Airtable-to-Jobber field mappings and reconciliation schedule: **TBD**
+- Folder naming/lifecycle standard: **TBD**
+- Approval thresholds by transaction type: **TBD**
