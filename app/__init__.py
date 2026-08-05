@@ -1,0 +1,1 @@
+"""Legacy Hub server package."""
