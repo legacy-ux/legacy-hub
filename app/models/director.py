@@ -10,6 +10,7 @@ from app.db import Base
 
 if TYPE_CHECKING:
     from app.models.specialist import Specialist
+    from app.models.task import Task
 
 
 class DirectorKey(StrEnum):
@@ -36,24 +37,17 @@ class Director(Base):
     name: Mapped[str] = mapped_column(String(100), nullable=False)
     description: Mapped[str | None] = mapped_column(Text, nullable=True)
     is_active: Mapped[bool] = mapped_column(
-        Boolean,
-        nullable=False,
-        default=True,
-        server_default="true",
+        Boolean, nullable=False, default=True, server_default="true"
     )
     created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True),
-        nullable=False,
-        server_default=func.now(),
+        DateTime(timezone=True), nullable=False, server_default=func.now()
     )
     updated_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True),
-        nullable=False,
-        server_default=func.now(),
-        onupdate=func.now(),
+        DateTime(timezone=True), nullable=False, server_default=func.now(), onupdate=func.now()
     )
 
     specialists: Mapped[list["Specialist"]] = relationship(back_populates="director")
+    tasks: Mapped[list["Task"]] = relationship(back_populates="director")
 
     def __repr__(self) -> str:
         return f"Director(id={self.id!r}, key={self.key!r}, name={self.name!r})"
