@@ -5,7 +5,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
 
 from app.db import get_db
-from app.models.task import Task, TaskPriority, TaskStatus
+from app.models.task import TaskPriority, TaskStatus
 from app.schemas.task import TaskAssignment, TaskCreate, TaskRead, TaskTransition, TaskUpdate
 from app.services.tasks import (
     InvalidTaskReferenceError,
@@ -18,13 +18,14 @@ from app.services.tasks import (
     transition_task,
     update_task,
 )
+from app.security.permissions import Permission, require_permission
 
 
 router = APIRouter(prefix="/api/v1/tasks", tags=["tasks"])
 DatabaseSession = Annotated[Session, Depends(get_db)]
 
 
-def _task_or_404(db: Session, task_id: uuid.UUID) -> Task:
+def _task_or_404(db: Session, task_id: uuid.UUID):
     try:
         return require_task(db, task_id)
     except TaskNotFoundError as exc:
@@ -35,7 +36,11 @@ def _raise_rule_error(exc: ValueError) -> None:
     raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(exc)) from exc
 
 
-@router.get("", response_model=list[TaskRead])
+@router.get(
+    "",
+    response_model=list[TaskRead],
+    dependencies=[Depends(require_permission(Permission.TASK_READ))],
+)
 def read_tasks(
     db: DatabaseSession,
     director_id: Annotated[uuid.UUID | None, Query()] = None,
@@ -52,7 +57,12 @@ def read_tasks(
     )
 
 
-@router.post("", response_model=TaskRead, status_code=status.HTTP_201_CREATED)
+@router.post(
+    "",
+    response_model=TaskRead,
+    status_code=status.HTTP_201_CREATED,
+    dependencies=[Depends(require_permission(Permission.TASK_WRITE))],
+)
 def create_task_route(payload: TaskCreate, db: DatabaseSession) -> TaskRead:
     try:
         return create_task(db, payload)
@@ -60,19 +70,31 @@ def create_task_route(payload: TaskCreate, db: DatabaseSession) -> TaskRead:
         _raise_rule_error(exc)
 
 
-@router.get("/{task_id}", response_model=TaskRead)
+@router.get(
+    "/{task_id}",
+    response_model=TaskRead,
+    dependencies=[Depends(require_permission(Permission.TASK_READ))],
+)
 def read_task(task_id: uuid.UUID, db: DatabaseSession) -> TaskRead:
     return _task_or_404(db, task_id)
 
 
-@router.patch("/{task_id}", response_model=TaskRead)
+@router.patch(
+    "/{task_id}",
+    response_model=TaskRead,
+    dependencies=[Depends(require_permission(Permission.TASK_WRITE))],
+)
 def update_task_route(
     task_id: uuid.UUID, payload: TaskUpdate, db: DatabaseSession
 ) -> TaskRead:
     return update_task(db, _task_or_404(db, task_id), payload)
 
 
-@router.post("/{task_id}/actions/assign", response_model=TaskRead)
+@router.post(
+    "/{task_id}/actions/assign",
+    response_model=TaskRead,
+    dependencies=[Depends(require_permission(Permission.TASK_WRITE))],
+)
 def assign_task_route(
     task_id: uuid.UUID, payload: TaskAssignment, db: DatabaseSession
 ) -> TaskRead:
@@ -82,7 +104,11 @@ def assign_task_route(
         _raise_rule_error(exc)
 
 
-@router.post("/{task_id}/actions/transition", response_model=TaskRead)
+@router.post(
+    "/{task_id}/actions/transition",
+    response_model=TaskRead,
+    dependencies=[Depends(require_permission(Permission.TASK_WRITE))],
+)
 def transition_task_route(
     task_id: uuid.UUID, payload: TaskTransition, db: DatabaseSession
 ) -> TaskRead:

@@ -14,6 +14,7 @@ from app.services.messages import (
     list_messages,
     require_message,
 )
+from app.security.permissions import Permission, require_permission
 
 
 router = APIRouter(prefix="/api/v1/messages", tags=["messages"])
@@ -27,7 +28,11 @@ def _message_or_404(db: Session, message_id: uuid.UUID) -> Message:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc)) from exc
 
 
-@router.get("", response_model=list[MessageRead])
+@router.get(
+    "",
+    response_model=list[MessageRead],
+    dependencies=[Depends(require_permission(Permission.MESSAGE_READ))],
+)
 def read_messages(
     db: DatabaseSession,
     task_id: Annotated[uuid.UUID | None, Query()] = None,
@@ -47,7 +52,8 @@ def read_messages(
 
 
 @router.post(
-    "/tasks/{task_id}", response_model=MessageRead, status_code=status.HTTP_201_CREATED
+    "/tasks/{task_id}", response_model=MessageRead, status_code=status.HTTP_201_CREATED,
+    dependencies=[Depends(require_permission(Permission.MESSAGE_WRITE))],
 )
 def create_message_route(
     task_id: uuid.UUID, payload: MessageCreate, db: DatabaseSession
@@ -58,6 +64,10 @@ def create_message_route(
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(exc)) from exc
 
 
-@router.get("/{message_id}", response_model=MessageRead)
+@router.get(
+    "/{message_id}",
+    response_model=MessageRead,
+    dependencies=[Depends(require_permission(Permission.MESSAGE_READ))],
+)
 def read_message(message_id: uuid.UUID, db: DatabaseSession) -> MessageRead:
     return _message_or_404(db, message_id)

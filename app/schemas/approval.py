@@ -4,17 +4,17 @@ from datetime import datetime
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from app.models.approval import ApprovalStatus
+from app.security.approvals import ApprovalAction
 
 
 class ApprovalCreate(BaseModel):
     director_id: uuid.UUID
-    action: str = Field(min_length=1, max_length=100)
+    action: ApprovalAction
     request_details: str | None = None
 
 
 class ApprovalDecision(BaseModel):
     status: ApprovalStatus
-    reviewed_by: str = Field(min_length=1, max_length=255)
     decision_notes: str | None = None
 
     @model_validator(mode="after")

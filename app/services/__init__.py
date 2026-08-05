@@ -2,6 +2,7 @@
 
 from app.services.approvals import (
     ApprovalNotFoundError,
+    ApprovalPermissionError,
     ApprovalServiceError,
     InvalidApprovalDecisionError,
     InvalidApprovalReferenceError,
@@ -46,6 +47,7 @@ from app.services.tasks import (
 __all__ = [
     "ALLOWED_TRANSITIONS",
     "ApprovalNotFoundError",
+    "ApprovalPermissionError",
     "ApprovalServiceError",
     "AuditNotFoundError",
     "AuditServiceError",

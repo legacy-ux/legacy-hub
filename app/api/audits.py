@@ -14,6 +14,7 @@ from app.services.audits import (
     list_audits,
     require_audit,
 )
+from app.security.permissions import Permission, require_permission
 
 
 router = APIRouter(prefix="/api/v1/audits", tags=["audits"])
@@ -27,7 +28,11 @@ def _audit_or_404(db: Session, audit_id: uuid.UUID) -> Audit:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc)) from exc
 
 
-@router.get("", response_model=list[AuditRead])
+@router.get(
+    "",
+    response_model=list[AuditRead],
+    dependencies=[Depends(require_permission(Permission.AUDIT_READ))],
+)
 def read_audits(
     db: DatabaseSession,
     director_id: Annotated[uuid.UUID | None, Query()] = None,
@@ -46,7 +51,12 @@ def read_audits(
     )
 
 
-@router.post("", response_model=AuditRead, status_code=status.HTTP_201_CREATED)
+@router.post(
+    "",
+    response_model=AuditRead,
+    status_code=status.HTTP_201_CREATED,
+    dependencies=[Depends(require_permission(Permission.AUDIT_WRITE))],
+)
 def create_audit_route(payload: AuditCreate, db: DatabaseSession) -> AuditRead:
     try:
         return create_audit(db, payload)
@@ -54,6 +64,10 @@ def create_audit_route(payload: AuditCreate, db: DatabaseSession) -> AuditRead:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(exc)) from exc
 
 
-@router.get("/{audit_id}", response_model=AuditRead)
+@router.get(
+    "/{audit_id}",
+    response_model=AuditRead,
+    dependencies=[Depends(require_permission(Permission.AUDIT_READ))],
+)
 def read_audit(audit_id: uuid.UUID, db: DatabaseSession) -> AuditRead:
     return _audit_or_404(db, audit_id)

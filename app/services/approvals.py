@@ -9,6 +9,8 @@ from app.models.task import Task
 from app.schemas.approval import ApprovalCreate, ApprovalDecision
 from app.schemas.audit import AuditCreate
 from app.services.audits import add_audit
+from app.security.approvals import ApprovalAction, can_decide_approval
+from app.security.auth import AuthenticatedPrincipal
 
 
 class ApprovalServiceError(ValueError):
@@ -24,6 +26,10 @@ class InvalidApprovalReferenceError(ApprovalServiceError):
 
 
 class InvalidApprovalDecisionError(ApprovalServiceError):
+    pass
+
+
+class ApprovalPermissionError(ApprovalServiceError):
     pass
 
 
@@ -84,15 +90,26 @@ def create_approval(
 
 
 def decide_approval(
-    session: Session, approval: Approval, payload: ApprovalDecision
+    session: Session,
+    approval: Approval,
+    payload: ApprovalDecision,
+    principal: AuthenticatedPrincipal,
 ) -> Approval:
     if approval.status != ApprovalStatus.PENDING:
         raise InvalidApprovalDecisionError("A decided Approval cannot be changed.")
     if payload.status == ApprovalStatus.PENDING:
         raise InvalidApprovalDecisionError("An Approval decision cannot return to pending.")
+    try:
+        action = ApprovalAction(approval.action)
+    except ValueError as exc:
+        raise InvalidApprovalDecisionError("The Approval action is not recognized.") from exc
+    if not can_decide_approval(principal, action):
+        raise ApprovalPermissionError(
+            "This approval requires an eligible human Director reviewer."
+        )
 
     approval.status = payload.status
-    approval.reviewed_by = payload.reviewed_by
+    approval.reviewed_by = principal.subject
     approval.decision_notes = payload.decision_notes
     approval.decided_at = datetime.now(timezone.utc)
     add_audit(
@@ -102,7 +119,7 @@ def decide_approval(
             task_id=approval.task_id,
             event_type="approval.decided",
             actor_type="human",
-            actor_id=payload.reviewed_by,
+            actor_id=principal.subject,
             entity_type="approval",
             entity_id=str(approval.id),
             details={"status": payload.status.value, "notes": payload.decision_notes},

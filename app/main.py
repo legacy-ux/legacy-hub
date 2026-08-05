@@ -1,6 +1,7 @@
 from fastapi import FastAPI
 
 from app.api.approvals import router as approvals_router
+from app.api.auth import router as auth_router
 from app.api.audits import router as audits_router
 from app.api.directors import router as directors_router
 from app.api.health import router as health_router
@@ -18,6 +19,7 @@ app = FastAPI(
 )
 
 app.include_router(health_router)
+app.include_router(auth_router)
 app.include_router(directors_router)
 app.include_router(tasks_router)
 app.include_router(messages_router)
