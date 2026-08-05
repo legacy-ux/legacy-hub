@@ -4,6 +4,7 @@ version = "0.1.0"
 description = "Core orchestration server for Legacy Hub"
 requires-python = ">=3.12"
 dependencies = [
+  "alembic>=1.16.0,<2.0",
   "fastapi>=0.116.0,<1.0",
   "uvicorn[standard]>=0.35.0,<1.0",
   "sqlalchemy>=2.0.41,<3.0",
