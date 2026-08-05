@@ -10,6 +10,7 @@ from app.db import Base
 
 if TYPE_CHECKING:
     from app.models.director import Director
+    from app.models.message import Message
     from app.models.task import Task
 
 
@@ -51,6 +52,7 @@ class Specialist(Base):
 
     director: Mapped["Director"] = relationship(back_populates="specialists")
     tasks: Mapped[list["Task"]] = relationship(back_populates="specialist")
+    messages: Mapped[list["Message"]] = relationship(back_populates="specialist")
 
     def __repr__(self) -> str:
         return f"Specialist(id={self.id!r}, key={self.key!r}, name={self.name!r})"
