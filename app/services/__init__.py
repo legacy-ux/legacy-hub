@@ -1,6 +1,33 @@
 """Application services for Legacy Hub."""
 
+from app.services.approvals import (
+    ApprovalNotFoundError,
+    ApprovalServiceError,
+    InvalidApprovalDecisionError,
+    InvalidApprovalReferenceError,
+    create_approval,
+    decide_approval,
+    list_approvals,
+    require_approval,
+)
+from app.services.audits import (
+    AuditNotFoundError,
+    AuditServiceError,
+    InvalidAuditReferenceError,
+    add_audit,
+    create_audit,
+    list_audits,
+    require_audit,
+)
 from app.services.directors import get_director, list_directors, synchronize_directors
+from app.services.messages import (
+    InvalidMessageReferenceError,
+    MessageNotFoundError,
+    MessageServiceError,
+    create_message,
+    list_messages,
+    require_message,
+)
 from app.services.tasks import (
     ALLOWED_TRANSITIONS,
     InvalidTaskReferenceError,
@@ -18,16 +45,37 @@ from app.services.tasks import (
 
 __all__ = [
     "ALLOWED_TRANSITIONS",
+    "ApprovalNotFoundError",
+    "ApprovalServiceError",
+    "AuditNotFoundError",
+    "AuditServiceError",
+    "InvalidApprovalDecisionError",
+    "InvalidApprovalReferenceError",
+    "InvalidAuditReferenceError",
+    "InvalidMessageReferenceError",
     "InvalidTaskReferenceError",
     "InvalidTaskTransitionError",
+    "MessageNotFoundError",
+    "MessageServiceError",
     "TaskEngineError",
     "TaskNotFoundError",
+    "add_audit",
     "assign_task",
+    "create_approval",
+    "create_audit",
+    "create_message",
     "create_task",
+    "decide_approval",
     "get_director",
     "get_task",
+    "list_approvals",
+    "list_audits",
     "list_directors",
+    "list_messages",
     "list_tasks",
+    "require_approval",
+    "require_audit",
+    "require_message",
     "require_task",
     "synchronize_directors",
     "transition_task",
