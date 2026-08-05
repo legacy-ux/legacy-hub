@@ -10,6 +10,7 @@ from app.db import Base
 
 if TYPE_CHECKING:
     from app.models.approval import Approval
+    from app.models.audit import Audit
     from app.models.director import Director
     from app.models.message import Message
     from app.models.specialist import Specialist
@@ -73,6 +74,7 @@ class Task(Base):
     approvals: Mapped[list["Approval"]] = relationship(
         back_populates="task", cascade="all, delete-orphan"
     )
+    audits: Mapped[list["Audit"]] = relationship(back_populates="task")
 
     def __repr__(self) -> str:
         return f"Task(id={self.id!r}, title={self.title!r}, status={self.status!r})"
