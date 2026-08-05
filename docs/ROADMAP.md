@@ -1,61 +1,37 @@
 # Legacy Hub Roadmap
 
-## Delivery approach
+## Legacy v1 release objective
 
-Legacy Hub will be built in small, dependable increments. A workflow must work manually with clear ownership and records before it is automated or given broader system access.
+Legacy v1 freezes the first production scope defined in [FOUNDATION.md](FOUNDATION.md): four seat-based Directors, four shared Specialist Agents, nine included workflows, Airtable as the structured-data source of truth, Google Drive for files, and Make-only Airtable-to-Jobber synchronization.
 
-## Phases
+## Delivery order
 
-| Phase | Objective | Key deliverables | Exit criteria |
-| --- | --- | --- | --- |
-| **0. Foundation** | Establish shared operating model and documentation | This documentation set, terminology, system ownership, initial data model | Core decisions are documented and approved |
-| **1. Manual pilot** | Prove the smallest high-value workflows | Intake, consultation capture, follow-ups, red flags, Drive/Airtable linking | Users complete pilot work consistently without lost context |
-| **2. Quote foundation** | Make quote/proposal preparation repeatable | Customer/property verification, proposal readiness, Jobber Quote Agent draft flow | Draft quotes are accurate, traceable, and approval-controlled |
-| **3. Project delivery** | Improve job handoff and closeout | Deposit-to-project setup, readiness, daily capture, final walkthrough/warranty | Jobs have visible readiness and complete closeout records |
-| **4. Account management** | Manage customers and properties by exception | Evaluations, opportunity reports, maintenance visibility, customer-for-life follow-up | Account manager can prioritize work from a dashboard |
-| **5. Intelligence and scale** | Add controlled analytical capability | Plant-library completeness, reporting, cost/profit insights, controlled financial intelligence | Quality, permissions, and review controls are proven |
-| **6. Platform evolution** | Upgrade the interface only when justified | Evaluate custom application or alternative interface | Migration decision is supported by measured need |
-
-## Near-term priorities
-
-1. Approve the foundational documentation and terminology.
-2. Define the Airtable pilot tables, fields, views, and interfaces.
-3. Build and test the quote/proposal draft workflow before expanding integrations.
-4. Define invoice routing separately from quote work.
-5. Establish Drive folder conventions and file-linking rules.
-6. Add automation only for a workflow that is manually stable.
-
-## Planned milestones
-
-| Milestone | Definition of done | Target date |
+| Phase | Objective | Exit criteria |
 | --- | --- | --- |
-| Documentation baseline approved | All seven documentation files reviewed and accepted | TBD |
-| Airtable pilot live | Core pilot tables and role views usable | TBD |
-| Quote draft pilot complete | Test quote drafts created and reviewed end to end | TBD |
-| Project readiness pilot complete | Pre-start checklist and red flags tested on live work | TBD |
-| Account manager evaluation pilot | Evaluation input produces internal and customer-ready reports | TBD |
+| 0. Documentation baseline | Approve the authoritative v1 model and ownership matrix | No conflicting Director, specialist, system-ownership, or workflow descriptions remain |
+| 1. Airtable foundation | Build the v1 entities, fields, links, task/red-flag patterns, and seat views | Directors can record and find v1 work in Airtable |
+| 2. Director workflows | Manually validate the included workflows by seat | Each workflow has accountable ownership, clear handoffs, and no lost context |
+| 3. Drive and communication discipline | Apply file linking and Gmail/Calendar recordkeeping | Files and material communication are traceable from Airtable |
+| 4. Make–Jobber synchronization | Implement only approved field/status mappings | Mapped sync is tested, reconciled, and creates visible exceptions on failure |
+| 5. Controlled specialist support | Add the four v1 agents after their request/result contracts are tested | Agents return useful structured results without taking workflow ownership |
+
+## Future Releases
+
+- Additional Directors, including Operations and Financial Intelligence Directors
+- Additional specialist agents, including email, quote, invoice, website, maintenance-intelligence, and photo-library agents
+- Invoice, deposit-to-project, material-readiness, final-walkthrough, warranty, customer-for-life, maintenance-intelligence, and advanced financial workflows
+- Commercial/HOA expansion, advanced reporting/forecasting, and custom application evaluation
 
 ## Decision gates
 
-- Do not automate external writes until the manual workflow is stable and approved.
-- Do not allow an agent to send customer communications without the specified human approval path.
-- Do not expand financial access until a role/permission model and review process exist.
-- Do not replace Airtable Interfaces with a custom application until measured workflow limits justify it.
+- Do not add a Director or Specialist Agent without updating the authoritative v1/future-release scope.
+- Do not automate a workflow until its manual version and Airtable ownership are stable.
+- Do not put business logic, decisions, routing, or communication inside Make.
+- Do not authorize unreviewed customer-facing or financial actions.
 
-## Risks and mitigations
+## Open decisions
 
-| Risk | Mitigation |
-| --- | --- |
-| Overbuilding before users adopt the process | Deliver one workflow at a time and validate manually |
-| Duplicate customer/property data | Require verification before record creation |
-| AI output treated as final without review | Draft-first policy and clear approver fields |
-| Knowledge scattered across tools | Drive-first artifact storage with Airtable links and ownership rules |
-| Automation failures hidden from users | Visible exceptions, retries, and reconciliation rules |
-
-## Deferred decisions
-
-- Custom application timing and technology
-- Full financial-system integration
-- Commercial/HOA-specific workflow expansion
-- Advanced reporting and forecasting
-- Formal agent evaluation suite and production release process
+- Airtable field/view/interface specifications: **TBD**
+- Make–Jobber mapping inventory and reconciliation frequency: **TBD**
+- Director permission and approval matrix: **TBD**
+- Drive folder naming and retention policy: **TBD**

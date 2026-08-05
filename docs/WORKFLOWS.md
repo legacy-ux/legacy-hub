@@ -1,90 +1,86 @@
 # Legacy Hub Workflows
 
-## Workflow standard
+## Legacy v1 workflow rules
 
-Every documented workflow should state the trigger, inputs, owner, required checks, outputs, approval point, system updates, exceptions, and completion criteria. Workflows should be tested manually before repeatable automation is enabled.
+Each workflow has one accountable Director for its primary seat. Directors may coordinate directly when work crosses seats, but no central Director, Operations Director, or Specialist Agent owns the workflow.
 
-## Core workflow catalog
+Every workflow records its request, linked customer/property, owner, task(s), workflow state, source files, approval state, exception(s), and completion in Airtable. Directors store files in Google Drive and link them back to Airtable. Make only synchronizes approved structured Airtable data with Jobber.
 
-| Workflow | Trigger | Primary owner | Approval point | Status |
-| --- | --- | --- | --- | --- |
-| New customer intake and verification | New request or customer information | AI Director | Before creating a new customer/property | Defined at high level |
-| Consultation capture | Consultation/site visit complete | Sales & Design Director | Before proposal preparation | Defined at high level |
-| Proposal readiness and quote drafting | Consultation information complete | Jobber Quote Agent | Before customer send | Defined at high level |
-| Deposit-to-project setup | Approval/deposit received | Operations Director | Before scheduling/material order | Defined at high level |
-| Material readiness and pre-start | Seven days before start / pre-start review | Operations Director | Before job start | Defined at high level |
-| Daily production capture | Crew workday / job activity | Crew leader / Operations Director | N/A | Defined at high level |
-| Final walkthrough and warranty activation | Work marked complete | Designer or Account Manager | Customer acceptance/payment verification | Defined at high level |
-| Property evaluation and enhancement opportunities | Scheduled evaluation | Account Manager Director | Before customer recommendations/send | Planned |
-| Plant library completion | Plant asset/research submitted | Plant Library Builder | Before approval/publish | Planned |
-| Invoice routing | Invoice request | AI Director / future Invoice Agent | Before invoice creation/send | TBD |
+## Included workflow catalog
 
-## New customer intake and verification
+| Workflow | Accountable Director | Completion |
+| --- | --- | --- |
+| New Customer Intake | Owner Director or Design & Sales Director, based on receiving seat | Verified customer/property record or a visible verification exception |
+| Existing Customer Lookup | Director receiving the request | Existing linked record identified and routed to the accountable seat |
+| Property Management | Account Manager Director | Updated property profile, tasks, and history are complete |
+| Proposal Workflow | Design & Sales Director | Customer-facing Jobber quote is ready for required review/send, with Airtable context complete |
+| Customer Communication | Account Manager Director or the Director accountable for the active workflow | Message outcome and follow-up are recorded |
+| Scheduling | Account Manager Director, coordinating with Crew Leader Director as needed | Readiness, schedule state, and notification status are recorded |
+| Daily Crew Management | Crew Leader Director | Daily capture and exceptions are linked to the project/property |
+| Property Evaluation | Account Manager Director | Evaluation, photos, scoring, report/recommendations, and follow-up tasks are complete |
+| Plant Library Management | Owner Director, using Plant Library Agent as needed | Plant/gallon-size record and completeness state are updated |
 
-1. Capture customer contact, property address, request type, source, and supplied files.
-2. Search for matching customer and property records before creation.
-3. If an existing record is found, route the information to that workspace.
-4. If no match is confirmed, create the required draft/new record through the approved system workflow.
-5. Assign the next owner and create any required follow-up or red flag.
+## New Customer Intake
 
-**Completion:** a verified customer/property relationship exists or a visible exception explains why it cannot be verified.
+1. The receiving Director captures contact details, property address, request type, source, and supplied files.
+2. The Director performs Existing Customer Lookup before any new record is created.
+3. If a matching customer/property exists, the Director links the request to the existing Airtable records and routes it to the accountable Director.
+4. If no match exists, the Director creates the Airtable customer, property, contact, intake, and next task records under the approved data rules.
+5. If Jobber needs the customer/property for a later transaction, Make synchronizes only the approved mapped fields after the Airtable records are verified.
 
-## Consultation to proposal-ready package
+## Existing Customer Lookup
 
-1. Capture photos, voice notes, measurements/quantities, goals, budget, preferences, decision-maker status, and next step.
-2. Store source files in Drive and link them to the consultation/project workspace.
-3. Check proposal readiness: scope, measurements, budget, design/mood board needs, availability, pricing notes, and HOA/approval needs.
-4. For work under $6,000, prepare an email proposal with a simple mood board as appropriate.
-5. For work over $6,000, prepare a formal presentation with a full mood board, plant palette, and renders as applicable.
-6. Send the complete approved package to the Jobber Quote Agent for draft preparation.
+1. Search Airtable by customer name, phone, email, property address, and known Jobber ID.
+2. Confirm the correct customer/property relationship before adding information or creating a duplicate.
+3. Link the request, files, and new task to the verified record.
+4. Create a red flag when a possible duplicate or conflicting identity cannot be resolved.
 
-**Completion:** a quote/proposal draft is ready for authorized review, or missing requirements are visible and assigned.
+## Property Management
 
-## Deposit to project setup
+The Account Manager Director maintains the property profile: access, gate/pets, irrigation notes, maintenance/service context, property history, customer preferences, Drive links, open tasks, and red flags. It coordinates with other Directors through linked tasks when a sales, crew, or owner decision is required.
 
-1. Verify customer approval and deposit status in Jobber.
-2. Confirm scope, latest proposal version, schedule estimate, crew assignment, material plan, and customer access notes.
-3. Create/update project workspace, linked tasks, and relevant Drive folder references.
-4. Record material ordering status; do not represent materials as ordered until that action is confirmed.
-5. Surface readiness red flags to the responsible owner.
+## Proposal Workflow
 
-**Completion:** project is ready to schedule or a blocker is assigned and visible.
+1. Design & Sales Director captures consultation information, photos, voice notes, measurements, goals, budget, preferences, decision-maker status, and next step.
+2. The Director stores source files in Drive and links them to Airtable.
+3. The Director verifies proposal readiness: scope, measurements, budget, design/mood-board needs, availability, pricing notes, and HOA requirements.
+4. The Director performs proposal and customer-communication work directly, using the Design Agent or Research Agent only for bounded support.
+5. The Director prepares the required customer-facing quote/proposal in Jobber under the approved transaction rule. Make may synchronize the approved mapped Airtable data and returned Jobber ID/status.
+6. For work under $6,000, use an email proposal and simple mood board when appropriate; for work over $6,000, use a formal presentation with full supporting materials as applicable.
 
-## Pre-start and production
+## Customer Communication
 
-### Pre-start checklist
+The accountable Director drafts, sends/receives, and records customer communication in Gmail. The Director links material messages, decisions, and required follow-up tasks to Airtable. Customer-facing messages remain subject to the applicable approval rule.
 
-- Final scope and latest proposal confirmed
-- Customer start confirmation completed
-- Access, gate, pets, HOA, and site constraints confirmed
-- Materials confirmed
-- Crew leader, layout, and special notes assigned
+## Scheduling
 
-### Daily capture
+1. Account Manager Director verifies the approved scope, readiness, customer constraints, and responsible crew before scheduling.
+2. The Director records internal schedule information, notification status, and readiness in Airtable.
+3. Where Jobber is used for a customer-facing scheduled transaction, Make synchronizes only the approved mapped schedule data and returns status to Airtable.
+4. Crew Leader Director receives the relevant job, access, layout, and special notes through its assigned workflow.
+5. Schedule changes record the reason, who changed it, who was notified, and any red flag.
 
-Crew reporting records clock-in/out, completed work, percent complete, photos, customer communication notes, issues, and crew-leader notes.
+## Daily Crew Management
 
-**Completion:** workday information is attached to the project and exceptions have owners.
+Crew Leader Director records clock-in/out, completed work, percent complete, photos, customer communication notes, issues, and crew-leader notes. It links daily capture to the Airtable project/property record and escalates customer-impacting issues to Account Manager Director and approval decisions to Owner Director when required.
 
-## Final walkthrough, warranty, and customer for life
+## Property Evaluation
 
-1. Designer or Account Manager completes final walkthrough, photos, punch-list notes, acceptance, and satisfaction confirmation.
-2. Verify final payment status and resolve any punch-list items.
-3. Activate warranty only after final walkthrough and payment verification.
-4. Schedule a seven-day thank-you/review/referral request and a 30-day enjoyment/referral follow-up.
-5. Enroll the customer in the monthly customer-for-life communication process as applicable.
+Account Manager Director captures structured questions, scoring, photos, observations, maintenance concerns, and enhancement opportunities. It stores source files in Drive, links them in Airtable, creates the appropriate internal/customer-ready report, and assigns follow-up tasks. The Design Agent or Research Agent may provide bounded supporting material.
 
-**Completion:** closeout artifacts, warranty status, follow-ups, and referral source tracking are complete.
+## Plant Library Management
+
+Owner Director maintains the plant-library workflow and may request the Plant Library Agent to prepare research, asset-completeness, or proposed-record results. Each plant/gallon-size record is reviewed and updated in Airtable; associated photos and documents remain in Drive.
 
 ## Exceptions and red flags
 
-Red flags must include severity, description, linked entity, owner, created date, next action, and resolution status. Examples include missing consultation information, material not confirmed, customer not notified of schedule change, skipped visit not rescheduled, unverified deposit, and incomplete final closeout.
+Every red flag includes severity, description, linked record, accountable Director, created date, next action, and resolution state. Examples: possible duplicate customer, missing proposal input, material/readiness issue, uncommunicated schedule change, incomplete daily capture, or unresolved property-evaluation recommendation.
 
-## Workflow details still to define
+## Future Releases
 
-- Invoice workflow and handoff rules
-- Schedule-change notification workflow
+- Invoice workflow
+- Deposit-to-project setup and formal material-readiness workflow
+- Final walkthrough, warranty, and customer-for-life workflow
 - Change-order hard stop and owner override record
 - Maintenance onboarding and service-time intelligence
-- Financial review and approval workflow
-- SLA targets, escalation timing, and notification channels
+- Detailed financial review/approval workflow
