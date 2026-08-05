@@ -9,6 +9,7 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.db import Base
 
 if TYPE_CHECKING:
+    from app.models.approval import Approval
     from app.models.director import Director
     from app.models.message import Message
     from app.models.specialist import Specialist
@@ -67,6 +68,9 @@ class Task(Base):
     director: Mapped["Director"] = relationship(back_populates="tasks")
     specialist: Mapped["Specialist | None"] = relationship(back_populates="tasks")
     messages: Mapped[list["Message"]] = relationship(
+        back_populates="task", cascade="all, delete-orphan"
+    )
+    approvals: Mapped[list["Approval"]] = relationship(
         back_populates="task", cascade="all, delete-orphan"
     )
 
