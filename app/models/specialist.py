@@ -10,6 +10,7 @@ from app.db import Base
 
 if TYPE_CHECKING:
     from app.models.director import Director
+    from app.models.task import Task
 
 
 class SpecialistKey(StrEnum):
@@ -28,9 +29,7 @@ class Specialist(Base):
 
     id: Mapped[uuid.UUID] = mapped_column(primary_key=True, default=uuid.uuid4)
     director_id: Mapped[uuid.UUID] = mapped_column(
-        ForeignKey("directors.id", ondelete="RESTRICT"),
-        nullable=False,
-        index=True,
+        ForeignKey("directors.id", ondelete="RESTRICT"), nullable=False, index=True
     )
     key: Mapped[SpecialistKey] = mapped_column(
         Enum(SpecialistKey, name="specialist_key", native_enum=False, length=32),
@@ -41,24 +40,17 @@ class Specialist(Base):
     name: Mapped[str] = mapped_column(String(100), nullable=False)
     description: Mapped[str | None] = mapped_column(Text, nullable=True)
     is_active: Mapped[bool] = mapped_column(
-        Boolean,
-        nullable=False,
-        default=True,
-        server_default="true",
+        Boolean, nullable=False, default=True, server_default="true"
     )
     created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True),
-        nullable=False,
-        server_default=func.now(),
+        DateTime(timezone=True), nullable=False, server_default=func.now()
     )
     updated_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True),
-        nullable=False,
-        server_default=func.now(),
-        onupdate=func.now(),
+        DateTime(timezone=True), nullable=False, server_default=func.now(), onupdate=func.now()
     )
 
     director: Mapped["Director"] = relationship(back_populates="specialists")
+    tasks: Mapped[list["Task"]] = relationship(back_populates="specialist")
 
     def __repr__(self) -> str:
         return f"Specialist(id={self.id!r}, key={self.key!r}, name={self.name!r})"
