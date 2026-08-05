@@ -1,11 +1,15 @@
 import uuid
 from datetime import datetime
 from enum import StrEnum
+from typing import TYPE_CHECKING
 
 from sqlalchemy import Boolean, DateTime, Enum, String, Text, func
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db import Base
+
+if TYPE_CHECKING:
+    from app.models.specialist import Specialist
 
 
 class DirectorKey(StrEnum):
@@ -48,6 +52,8 @@ class Director(Base):
         server_default=func.now(),
         onupdate=func.now(),
     )
+
+    specialists: Mapped[list["Specialist"]] = relationship(back_populates="director")
 
     def __repr__(self) -> str:
         return f"Director(id={self.id!r}, key={self.key!r}, name={self.name!r})"
